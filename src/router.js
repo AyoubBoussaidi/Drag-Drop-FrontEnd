@@ -5,6 +5,7 @@ import Main from './components/page/Main.vue';
 import Register from './components/page/Register.vue';
 import Projects from './components/page/Projects.vue';
 import Login from './components/page/Login.vue';
+import Jspredsheet from './components/component/Jspredsheet.vue'
 
 Vue.use(Router);
 
@@ -33,6 +34,12 @@ const router = new Router({
       path: '/home',
       name: 'projects',
       component: Projects,
+      //meta: { requiresAuth: true },
+    },
+    {
+      path: '/predsheet',
+      name: 'predsheet',
+      component: Jspredsheet,
       //meta: { requiresAuth: true },
     },
 
