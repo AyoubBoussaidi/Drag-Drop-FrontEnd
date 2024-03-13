@@ -33,9 +33,7 @@
       </div>
       <div id="dragArea" ref="dragArea" class="drop-area" @dragover="allowDrop" @drop="handleDropInDropArea">
         <div>
-          <div id="my-spreadsheet"></div>
-          <!--           <div><input type="button" value="Add new row" @click="addNewRow" /></div> -->
-          <div v-if="spreadsheet"><input type="button" value="Add new column" @click="addColumn" /></div>
+          <!--<div v-if="spreadsheet"><input type="button" value="Add new column" @click="addColumn" /></div> -->
         </div>
       </div>
 
@@ -75,8 +73,6 @@ export default {
     const projectId = this.$route.params.projectId;
     this.$store.commit('setSelectedProjectId', projectId);
     console.log('Project IDDDDDD:', projectId);
-    let spreadsheet = jspreadsheet(this.$el, options);
-    Object.assign(this, spreadsheet);
   },
   computed: {
     selectedProjectId() {
@@ -91,7 +87,7 @@ export default {
         { id: 2, name: 'Button', label: 'button', color: '#F2F6FC', round: true },
         { id: 4, name: 'Number', label: 'number', color: '#F2F6FC', round: true },
         { id: 5, name: 'Title', label: 'title', color: '#F2F6FC', round: true },
-        { id: 3, name: 'SpreadSheet', label: 'spreadsheet', color: '#F2F6FC', round: true },
+        { id: 3, name: 'spreadSheet', label: 'spreadsheet', color: '#F2F6FC', round: true },
       ],
       draggableElements: [],
       selectedElement: null,
@@ -102,12 +98,16 @@ export default {
       sidebarButton: 'Add Interface',
       templates: [],
       isDragging: false,
+      columnNames: [{ title: 'Id', width: '100px' },
+      { title: 'Name', width: '100px' },
+      { title: 'Value', width: '100px' },],
       options: {
         data: [[]],
+        columns: this.columnNames,
         minDimensions: [3, 1],
         filters: true,
-
       },
+
     };
   },
 
@@ -184,10 +184,16 @@ export default {
         element = document.createElement('div');
         element.setAttribute('id', `my-spreadsheet`);
         element.setAttribute('type', 'spreadsheet');
-        //element.textContent = `Title ${this.draggableElements.length + 1}`;
         element.style.color = '#333';
         element.style.marginBottom = '10px';
-        this.initializeJSpreadsheet();
+
+        if (element) {
+          // Initialize jSpreadsheet
+          this.initializeJSpreadsheet(element);
+          console.log('Created Element : ', element)
+        } else {
+          console.error("Element with ID 'my-spreadsheet' not found.");
+        }
 
       }
 
@@ -220,17 +226,29 @@ export default {
         min: element.getAttribute('min'),
         max: element.getAttribute('max'),
         size: element.getAttribute('size'),
+        columns: this.columnNames,
       });
-
+      console.log("I want to see columns ", this.columnNames);
       this.$refs.dragArea.appendChild(container);
       event.target.appendChild(container);
     },
 
 
+
     initializeJSpreadsheet() {
-      // Initialize jSpreadsheet
-      this.spreadsheet = jspreadsheet(document.getElementById('my-spreadsheet'), this.options);
+      if (this.spreadsheet) {
+        this.spreadsheet.destroy();
+      }
+
+      this.spreadsheet = jspreadsheet(document.getElementById('my-spreadsheet'), {
+        data: [[]],
+        columns: this.columnNames, // Use the columnNames array here
+        minDimensions: [3, 1],
+        filters: true,
+      }); console.log("Created SpreadSheet", this.spreadsheet);
     },
+
+
     addNewRow() {
       // Add new row to the spreadsheet
       if (this.spreadsheet) {

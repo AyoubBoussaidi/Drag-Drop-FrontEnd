@@ -22,6 +22,9 @@
                     <el-input v-model="selectedElement.textContent" @input="updateAttribute('textContent')"
                         @click.stop />
                 </el-form-item>
+                <el-form-item v-if="(selectedElement)" :label="capitalizeFirstLetter('Columns')">
+                    <el-input v-model="draggableElements.columns.type" @click.stop />
+                </el-form-item>
             </el-form>
         </div>
         <div v-else>
@@ -57,6 +60,7 @@ export default {
                 id: null,
                 name: null,
                 attributes: {},
+                columns: {},
             },
             input: '',
             renderedInterface: null,
@@ -65,6 +69,7 @@ export default {
     },
     mounted() {
         document.addEventListener('click', this.handleClick);
+        console.log(draggableElements);
     },
     beforeDestroy() {
         document.removeEventListener('click', this.handleClick);
@@ -250,6 +255,7 @@ export default {
                     attributes: {},
                 };
             }
+            console.log('Dragaga', this.draggableElements)
         },
         findElementWithId(element) {
             while (element && !element.id) {
@@ -267,6 +273,8 @@ export default {
             return attributes;
         },
         updateAttribute(key) {
+            console.log("draggableElts : ", this.draggableElements);
+
             console.log('Updating attribute:', key);
             console.log('draggableElements:', this.draggableElements);
 
