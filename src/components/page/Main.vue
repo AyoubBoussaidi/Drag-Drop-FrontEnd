@@ -1,4 +1,10 @@
 <template>
+  <html>
+
+  <head>
+    <link rel="stylesheet" href="https://jspreadsheet.com/v7/jspreadsheet.css" type="text/css" />
+    <link rel="stylesheet" href="https://jsuites.net/v5/jsuites.css" type="text/css" />
+  </head>
   <main>
     <header class="header">
       <div>
@@ -26,6 +32,11 @@
 
       </div>
       <div id="dragArea" ref="dragArea" class="drop-area" @dragover="allowDrop" @drop="handleDropInDropArea">
+        <div>
+          <div id="my-spreadsheet"></div>
+          <!--           <div><input type="button" value="Add new row" @click="addNewRow" /></div> -->
+          <div v-if="spreadsheet"><input type="button" value="Add new column" @click="addColumn" /></div>
+        </div>
       </div>
 
       <element-properties-panel class="element-properties-panel" :panelSelectedElement="selectedElement"
@@ -33,6 +44,8 @@
         :selectedProjectId="selectedProjectId" ref="elementPropertiesPanel" />
     </div>
   </main>
+
+  </html>
 </template>
 
 <script>
@@ -43,6 +56,7 @@ import VueAxios from 'vue-axios';
 import elementPropertiesPanel from './ElementPropertiesPanel.vue';
 import InterfaceSideBar from '../component/InterfaceSideBar.vue';
 import { mapMutations } from 'vuex';
+import jspreadsheet from 'jspreadsheet-ce';
 
 Vue.use(VueAxios, axios);
 
@@ -61,6 +75,8 @@ export default {
     const projectId = this.$route.params.projectId;
     this.$store.commit('setSelectedProjectId', projectId);
     console.log('Project IDDDDDD:', projectId);
+    let spreadsheet = jspreadsheet(this.$el, options);
+    Object.assign(this, spreadsheet);
   },
   computed: {
     selectedProjectId() {
@@ -73,9 +89,9 @@ export default {
       items: [
         { id: 1, name: 'Input', label: 'input', color: '#F2F6FC', round: true },
         { id: 2, name: 'Button', label: 'button', color: '#F2F6FC', round: true },
-        /* { id: 3, name: 'Checkbox', label: 'checkbox', color: '#F2F6FC', round: true }, */
         { id: 4, name: 'Number', label: 'number', color: '#F2F6FC', round: true },
         { id: 5, name: 'Title', label: 'title', color: '#F2F6FC', round: true },
+        { id: 3, name: 'SpreadSheet', label: 'spreadsheet', color: '#F2F6FC', round: true },
       ],
       draggableElements: [],
       selectedElement: null,
@@ -86,6 +102,12 @@ export default {
       sidebarButton: 'Add Interface',
       templates: [],
       isDragging: false,
+      options: {
+        data: [[]],
+        minDimensions: [3, 1],
+        filters: true,
+
+      },
     };
   },
 
@@ -122,7 +144,7 @@ export default {
         element.setAttribute('id', `input_${this.draggableElements.length + 1}`);
         element.setAttribute('placeholder', 'Paste your text here');
         element.setAttribute('value', `Default Value`);
-        element.setAttribute('size', `50`);
+        element.setAttribute('size', `10`);
         element.style.border = '1px solid #ccc';
         element.style.padding = '5px';
       } else if (label === 'number') {
@@ -158,9 +180,19 @@ export default {
         element.textContent = `Title ${this.draggableElements.length + 1}`;
         element.style.color = '#333';
         element.style.marginBottom = '10px';
+      } else if (label === 'spreadsheet') {
+        element = document.createElement('div');
+        element.setAttribute('id', `my-spreadsheet`);
+        element.setAttribute('type', 'spreadsheet');
+        //element.textContent = `Title ${this.draggableElements.length + 1}`;
+        element.style.color = '#333';
+        element.style.marginBottom = '10px';
+        this.initializeJSpreadsheet();
+
       }
 
-      if (label != 'button' && label != 'title') {
+
+      if (label != 'button' && label != 'title' && label != 'spreadsheet') {
         element.setAttribute('label', `${label} ${this.draggableElements.length + 1}`);
       }
       element.setAttribute('class', 'dropped-item');
@@ -189,11 +221,32 @@ export default {
         max: element.getAttribute('max'),
         size: element.getAttribute('size'),
       });
-      console.log("Draggggggga : ", this.draggableElements);
 
       this.$refs.dragArea.appendChild(container);
       event.target.appendChild(container);
-      console.log("Called handleDropInDropArea");
+    },
+
+
+    initializeJSpreadsheet() {
+      // Initialize jSpreadsheet
+      this.spreadsheet = jspreadsheet(document.getElementById('my-spreadsheet'), this.options);
+    },
+    addNewRow() {
+      // Add new row to the spreadsheet
+      if (this.spreadsheet) {
+        this.spreadsheet.destroy();
+        this.spreadsheet.insertRow();
+        this.initializeJSpreadsheet()
+      }
+    },
+    addColumn() {
+      // Add new column to the spreadsheet
+      if (this.spreadsheet) {
+        this.spreadsheet.destroy();
+        this.spreadsheet.insertColumn();
+        this.initializeJSpreadsheet()
+
+      }
     },
     updateAttributes(newAttributes) {
       console.log('Before update - newAttributes:', newAttributes);
@@ -309,7 +362,7 @@ header {
 
 .el-button {
   margin: 4px;
-  width: 100px;
+  width: 120px;
 }
 
 .choice-btn {

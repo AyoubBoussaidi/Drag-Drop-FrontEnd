@@ -6,8 +6,8 @@
         <div><el-input placeholder="Please name your interface" v-model="input" @click.stop
                 aria-required="true"></el-input>
         </div>
-        <div v-if="selectedElement">
-            <h2>{{ selectedElement.attributes.type }} : {{ selectedElement.attributes.value }}</h2>
+        <div v-if="selectedElement && selectedElement.attributes.type">
+            <h2>{{ selectedElement.attributes.type + ' :' }} {{ selectedElement.attributes.value }}</h2>
         </div>
         <div v-if="selectedElement">
             <el-form :model="selectedElement.attributes" ref="elementForm" label-width="80px">

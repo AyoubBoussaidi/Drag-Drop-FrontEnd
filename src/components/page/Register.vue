@@ -18,9 +18,9 @@
           <el-input v-model="input.email" placeholder="Enter Email"></el-input>
         </el-form-item>
 
-        <el-form-item label="Age" prop="age">
+        <!--         <el-form-item label="Age" prop="age">
           <el-input type="number" v-model="input.age" placeholder="Enter Age"></el-input>
-        </el-form-item>
+        </el-form-item> -->
 
         <el-form-item label="Password" prop="password">
           <el-input v-model="input.password" placeholder="Enter Password" type="password"
@@ -29,9 +29,9 @@
 
         <el-form-item>
           <div class="button-container">
+            <el-button class="go-to-login-text" round type="danger" @click="goLogin">Cancel</el-button>
             <el-button class="register-btn" round type="primary" native-type="submit"
               @click="saveUser">Register</el-button>
-            <el-button class="go-to-login-text" round type="danger" @click="goLogin">Cancel</el-button>
           </div>
         </el-form-item>
       </div>
