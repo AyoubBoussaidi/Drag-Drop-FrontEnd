@@ -12,19 +12,30 @@
         <div v-if="selectedElement">
             <el-form :model="selectedElement.attributes" ref="elementForm" label-width="80px">
                 <el-form-item v-for="(value, key) in selectedElement.attributes" :key="key"
-                    :label="capitalizeFirstLetter(key)">
-                    <el-input v-model="selectedElement.attributes[key]" @input="updateAttribute(key)" @click.stop />
+                    :label="capitalizeFirstLetter(key + ': ')">
+                    <el-input v-model="selectedElement.attributes[key]" @input="updateAttribute(key, $event)"
+                        @click.stop />
 
                 </el-form-item>
                 <el-form-item
                     v-if="(selectedElement.attributes.type != 'Button' || selectedElement.attributes.type != 'Title') && (selectedElement.textContent)"
-                    :label="capitalizeFirstLetter('textContent')">
+                    :label="capitalizeFirstLetter('textContent: ')" label-position="left">
                     <el-input v-model="selectedElement.textContent" @input="updateAttribute('textContent')"
                         @click.stop />
                 </el-form-item>
-                <el-form-item v-if="(selectedElement)" :label="capitalizeFirstLetter('Columns')">
-                    <el-input v-model="draggableElements.columns.type" @click.stop />
+                <label v-if="selectedElement.attributes.type == 'spreadsheet'">Columns: </label>
+                <el-form-item v-if="selectedElement.attributes.type == 'spreadsheet'">
+                    <el-input class="el-input-spreadsheet" v-for="(column, index) in options.columns"
+                        :key="column.title + '-title-' + index" v-model="column.title"
+                        @change="updateColumnTitle(index, $event.target.value)"></el-input>
+                    <el-input class="el-input-spreadsheet" v-for="(column, index) in options.columns"
+                        :key="column.width + '-width-' + index" v-model="column.width"
+                        @change="updateColumnWidth(index, $event.target.value)"></el-input>
+                    <el-button @click="addColumn">Add Column</el-button>
                 </el-form-item>
+
+
+
             </el-form>
         </div>
         <div v-else>
@@ -37,6 +48,7 @@
 
 import ApiService from '../../service/apiService';
 import Vue from 'vue';
+import jspreadsheet from 'jspreadsheet-ce'
 
 export default {
     props: {
@@ -52,6 +64,11 @@ export default {
             type: String,
         },
         templates: Array,
+        options: {
+            type: Object,
+        },
+        spreadsheet: jspreadsheet,
+        updateColumns: Function,
     },
     data() {
         return {
@@ -69,10 +86,22 @@ export default {
     },
     mounted() {
         document.addEventListener('click', this.handleClick);
-        console.log(draggableElements);
+        console.log('optioooons : ', this.options.columns)
+
     },
     beforeDestroy() {
         document.removeEventListener('click', this.handleClick);
+    },
+    watch: {
+        'options.columns': {
+            handler(newColumns, oldColumns) {
+
+                console.log('New columns:', newColumns);
+                console.log('New columns:', oldColumns);
+                this.updateSpreadsheet(newColumns);
+            },
+            deep: true // Watch for changes deeply inside the columns array
+        }
     },
     methods: {
         async saveTemplate() {
@@ -232,9 +261,9 @@ export default {
         handleClick(event) {
             const clickedElement = event.target;
             const targetElement = this.findElementWithId(clickedElement);
-
             if (targetElement) {
                 const elementType = targetElement.tagName.toLowerCase();
+                console.log('ssss : ', targetElement.tagName.toLowerCase());
                 const attributes = this.getAttributes(targetElement);
                 this.selectedElement = {
                     type: elementType,
@@ -255,6 +284,11 @@ export default {
                     attributes: {},
                 };
             }
+            console.log("this.options.columns[0].title ", this.options.columns[0].title);
+            console.log("this.options.columns[1].title ", this.options.columns[1].title);
+            console.log("this.options.columns[2].title ", this.options.columns[2].title);
+
+
             console.log('Dragaga', this.draggableElements)
         },
         findElementWithId(element) {
@@ -272,11 +306,11 @@ export default {
 
             return attributes;
         },
-        updateAttribute(key) {
-            console.log("draggableElts : ", this.draggableElements);
+        updateAttribute(key, event) {
+            console.log("Updating attribute:", key);
+            console.log("Selected element:", this.selectedElement);
+            console.log("Selected element attributes:", this.selectedElement.attributes);
 
-            console.log('Updating attribute:', key);
-            console.log('draggableElements:', this.draggableElements);
 
             if (this.selectedElement && this.selectedElement.id) {
                 const element = document.getElementById(this.selectedElement.id);
@@ -284,10 +318,10 @@ export default {
                 if (element) {
                     if (key === 'textContent') {
                         // Handle special case for textContent
-                        element.textContent = this.selectedElement.textContent;
+                        element.textContent = event;
                     } else {
                         // Update other attributes
-                        element.setAttribute(key, this.selectedElement.attributes[key]);
+                        element.setAttribute(key, event);
                     }
 
                     const draggableElementIndex = this.draggableElements.findIndex(
@@ -297,7 +331,7 @@ export default {
                     if (draggableElementIndex !== -1) {
                         Vue.set(this.draggableElements, draggableElementIndex, {
                             ...this.draggableElements[draggableElementIndex],
-                            [key]: this.selectedElement.attributes[key],
+                            [key]: event,
                         });
 
                         // Update other properties
@@ -314,6 +348,20 @@ export default {
                     }
                 }
             }
+        },
+
+        addColumn() { },
+
+        updateColumnTitle(index, event) {
+            this.$emit('update-column-title', { index, value: event });
+        },
+        updateColumnWidth(index, event) {
+            this.$emit('update-column-width', { index, value: event });
+        },
+
+        updateSpreadsheet(newColumns) {
+
+            console.log('Updating spreadsheet with new columns:', newColumns);
         },
 
         capitalizeFirstLetter(str) {
@@ -336,12 +384,16 @@ export default {
     color: '#F2F6FC'
 }
 
+.el-input-spreadsheet {
+    width: 30%;
+}
+
 .properties-panel {
     margin-top: 0px;
     padding: 10px;
     padding-left: 5px;
     border: 2px solid #ccc;
-    min-width: 400px;
+    min-width: 35%;
 }
 
 .el-input {

@@ -39,7 +39,8 @@
 
       <element-properties-panel class="element-properties-panel" :panelSelectedElement="selectedElement"
         :draggableElements="draggableElements" @updateAttributes="updateAttributes"
-        :selectedProjectId="selectedProjectId" ref="elementPropertiesPanel" />
+        :selectedProjectId="selectedProjectId" ref="elementPropertiesPanel" :spreadsheet="spreadsheet"
+        :options="options" @update-column-title="updateColumnTitle" @update-column-width="updateColumnWidth" />
     </div>
   </main>
 
@@ -73,6 +74,8 @@ export default {
     const projectId = this.$route.params.projectId;
     this.$store.commit('setSelectedProjectId', projectId);
     console.log('Project IDDDDDD:', projectId);
+    console.log('Sended from the child new values : ', this.options.columns);
+    this.initializeJSpreadsheet();
   },
   computed: {
     selectedProjectId() {
@@ -98,12 +101,13 @@ export default {
       sidebarButton: 'Add Interface',
       templates: [],
       isDragging: false,
-      columnNames: [{ title: 'Id', width: '100px' },
-      { title: 'Name', width: '100px' },
-      { title: 'Value', width: '100px' },],
+      spreadsheet: [],
+
       options: {
         data: [[]],
-        columns: this.columnNames,
+        columns: [{ title: 'Id', width: '100px' },
+        { title: 'Name', width: '100px' },
+        { title: 'Value', width: '100px' },],
         minDimensions: [3, 1],
         filters: true,
       },
@@ -182,18 +186,11 @@ export default {
         element.style.marginBottom = '10px';
       } else if (label === 'spreadsheet') {
         element = document.createElement('div');
-        element.setAttribute('id', `my-spreadsheet`);
+        element.setAttribute('id', `my-spreadsheet ${this.draggableElements.length + 1}`);
         element.setAttribute('type', 'spreadsheet');
+        this.initializeJSpreadsheet(element);
         element.style.color = '#333';
         element.style.marginBottom = '10px';
-
-        if (element) {
-          // Initialize jSpreadsheet
-          this.initializeJSpreadsheet(element);
-          console.log('Created Element : ', element)
-        } else {
-          console.error("Element with ID 'my-spreadsheet' not found.");
-        }
 
       }
 
@@ -226,28 +223,46 @@ export default {
         min: element.getAttribute('min'),
         max: element.getAttribute('max'),
         size: element.getAttribute('size'),
-        columns: this.columnNames,
+        columns: this.options.columns,
       });
-      console.log("I want to see columns ", this.columnNames);
+      console.log("I want to see columns ", this.options.columns);
       this.$refs.dragArea.appendChild(container);
       event.target.appendChild(container);
     },
 
+    updateColumns() {
+      const updatedColumns = this.options.columns.map((column, index) => {
+        return {
+          title: this.$refs['columnTitle_' + index][0].modelValue,
+          width: this.$refs['columnWidth_' + index][0].modelValue,
+        };
+      });
 
+      this.options.columns = updatedColumns;
 
-    initializeJSpreadsheet() {
-      if (this.spreadsheet) {
-        this.spreadsheet.destroy();
-      }
-
-      this.spreadsheet = jspreadsheet(document.getElementById('my-spreadsheet'), {
-        data: [[]],
-        columns: this.columnNames, // Use the columnNames array here
-        minDimensions: [3, 1],
-        filters: true,
-      }); console.log("Created SpreadSheet", this.spreadsheet);
+      console.log('Updated columns:', this.options.columns);
     },
 
+    updateColumnTitle({ index, value }) {
+      this.options.columns[index].title = value;
+
+    },
+    updateColumnWidth({ index, value }) {
+      this.options.columns[index].width = value;
+    },
+    initializeJSpreadsheet(element) {
+      if (this.spreadsheet) {
+        //this.spreadsheet.destroy();
+      }
+      console.log('ele : ', element);
+      this.spreadsheet = jspreadsheet(element, {
+        data: [[]],
+        columns: this.options.columns,
+        minDimensions: [3, 1],
+        filters: true,
+      });
+      console.log("Created SpreadSheet", this.spreadsheet);
+    },
 
     addNewRow() {
       // Add new row to the spreadsheet
@@ -337,6 +352,7 @@ header {
   width: 400px;
   padding: 20px;
   margin-left: 0;
+
 }
 
 .drag-area {
@@ -345,6 +361,7 @@ header {
   margin-left: 10px;
   margin-right: 10px;
   padding: 20px;
+  width: 20%;
 }
 
 
@@ -412,7 +429,7 @@ header {
   margin-left: auto;
   padding: 30px;
 
-  min-width: 600px;
+  min-width: 45%;
   align-items: center;
 }
 </style>

@@ -98,7 +98,7 @@ export default {
 .interface-sidebar {
     margin-right: auto;
     padding: 10px;
-    width: 200px;
+    width: 30%;
     background-color: #f0f0f0;
 }
 
