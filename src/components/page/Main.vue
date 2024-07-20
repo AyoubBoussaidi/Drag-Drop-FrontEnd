@@ -2,8 +2,11 @@
   <html>
 
   <head>
+
+
     <link rel="stylesheet" href="https://jspreadsheet.com/v7/jspreadsheet.css" type="text/css" />
     <link rel="stylesheet" href="https://jsuites.net/v5/jsuites.css" type="text/css" />
+
   </head>
   <main>
     <header class="header">
@@ -40,7 +43,7 @@
       <element-properties-panel class="element-properties-panel" :panelSelectedElement="selectedElement"
         :draggableElements="draggableElements" @updateAttributes="updateAttributes"
         :selectedProjectId="selectedProjectId" ref="elementPropertiesPanel" :spreadsheet="spreadsheet"
-        :options="options" @update-column-title="updateColumnTitle" @update-column-width="updateColumnWidth" />
+        :options="options" @update-column-title="updateColumnTitle"  />
     </div>
   </main>
 
@@ -76,6 +79,8 @@ export default {
     console.log('Project IDDDDDD:', projectId);
     console.log('Sended from the child new values : ', this.options.columns);
     this.initializeJSpreadsheet();
+    //this.handleUpdateSpreadsheet();
+
   },
   computed: {
     selectedProjectId() {
@@ -108,6 +113,7 @@ export default {
         columns: [{ title: 'Id', width: '100px' },
         { title: 'Name', width: '100px' },
         { title: 'Value', width: '100px' },],
+
         minDimensions: [3, 1],
         filters: true,
       },
@@ -186,7 +192,7 @@ export default {
         element.style.marginBottom = '10px';
       } else if (label === 'spreadsheet') {
         element = document.createElement('div');
-        element.setAttribute('id', `my-spreadsheet ${this.draggableElements.length + 1}`);
+        element.setAttribute('id', `my-spreadsheet`);
         element.setAttribute('type', 'spreadsheet');
         this.initializeJSpreadsheet(element);
         element.style.color = '#333';
@@ -255,7 +261,7 @@ export default {
         //this.spreadsheet.destroy();
       }
       console.log('ele : ', element);
-      this.spreadsheet = jspreadsheet(element, {
+      this.spreadsheet = jspreadsheet(document.getElementById('my-spreadsheet'), {
         data: [[]],
         columns: this.options.columns,
         minDimensions: [3, 1],
@@ -263,7 +269,7 @@ export default {
       });
       console.log("Created SpreadSheet", this.spreadsheet);
     },
-
+    
     addNewRow() {
       // Add new row to the spreadsheet
       if (this.spreadsheet) {

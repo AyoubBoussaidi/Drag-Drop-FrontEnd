@@ -7,6 +7,7 @@
     "preview": "vite preview --port 4173"
   },
   "dependencies": {
+    "@jspreadsheet/vue": "^10.9.3",
     "axios": "^1.6.7",
     "element-ui": "^2.15.14",
     "jspreadsheet": "^10.9.3",

@@ -18,24 +18,19 @@
 
                 </el-form-item>
                 <el-form-item
-                    v-if="(selectedElement.attributes.type != 'Button' || selectedElement.attributes.type != 'Title') && (selectedElement.textContent)"
+                    v-if="(selectedElement.attributes.type != 'Button' || selectedElement.attributes.type != 'Title' || selectedElement.attributes.type != 'spreadsheet') && (selectedElement.textContent)"
                     :label="capitalizeFirstLetter('textContent: ')" label-position="left">
                     <el-input v-model="selectedElement.textContent" @input="updateAttribute('textContent')"
                         @click.stop />
                 </el-form-item>
                 <label v-if="selectedElement.attributes.type == 'spreadsheet'">Columns: </label>
                 <el-form-item v-if="selectedElement.attributes.type == 'spreadsheet'">
-                    <el-input class="el-input-spreadsheet" v-for="(column, index) in options.columns"
-                        :key="column.title + '-title-' + index" v-model="column.title"
-                        @change="updateColumnTitle(index, $event.target.value)"></el-input>
-                    <el-input class="el-input-spreadsheet" v-for="(column, index) in options.columns"
-                        :key="column.width + '-width-' + index" v-model="column.width"
-                        @change="updateColumnWidth(index, $event.target.value)"></el-input>
-                    <el-button @click="addColumn">Add Column</el-button>
+                    <el-input v-for="(column, index) in columnHeaders" :key="index" class="el-input-spreadsheet"
+                        v-model="column.value" :placeholder="`Header ${index + 1}`"></el-input>
+
+                    <el-input v-for="(columnWidth, index) in columnWidths" :key="index" class="el-input-spreadsheet"
+                        v-model="columnWidth.value" :placeholder="`Width ${index + 1}`"></el-input>
                 </el-form-item>
-
-
-
             </el-form>
         </div>
         <div v-else>
@@ -82,12 +77,15 @@ export default {
             input: '',
             renderedInterface: null,
             templateId: null,
+            columnHeaders: [],
+            columnWidths: [],
         };
     },
     mounted() {
         document.addEventListener('click', this.handleClick);
-        console.log('optioooons : ', this.options.columns)
-
+        console.log('optioooonns:s ', this.options.columns)
+        this.initializeColumnHeaders();
+        //this.initializeColumnWidths();
     },
     beforeDestroy() {
         document.removeEventListener('click', this.handleClick);
@@ -98,9 +96,9 @@ export default {
 
                 console.log('New columns:', newColumns);
                 console.log('New columns:', oldColumns);
-                this.updateSpreadsheet(newColumns);
+                //this.updateSpreadsheet(newColumns);
             },
-            deep: true // Watch for changes deeply inside the columns array
+            deep: true,
         }
     },
     methods: {
@@ -259,6 +257,7 @@ export default {
         },
 
         handleClick(event) {
+
             const clickedElement = event.target;
             const targetElement = this.findElementWithId(clickedElement);
             if (targetElement) {
@@ -284,12 +283,6 @@ export default {
                     attributes: {},
                 };
             }
-            console.log("this.options.columns[0].title ", this.options.columns[0].title);
-            console.log("this.options.columns[1].title ", this.options.columns[1].title);
-            console.log("this.options.columns[2].title ", this.options.columns[2].title);
-
-
-            console.log('Dragaga', this.draggableElements)
         },
         findElementWithId(element) {
             while (element && !element.id) {
@@ -350,19 +343,40 @@ export default {
             }
         },
 
-        addColumn() { },
+        addColumn() {
+            const columnIndex = this.columnHeaders.length; // Insert new column at the end
+            this.spreadsheet.insertColumn(columnIndex); // Insert new column in the spreadsheet
 
-        updateColumnTitle(index, event) {
-            this.$emit('update-column-title', { index, value: event });
-        },
-        updateColumnWidth(index, event) {
-            this.$emit('update-column-width', { index, value: event });
+            // Update the column headers and widths arrays
+            this.columnHeaders.push({ value: 'New Header' });
+            this.options.columns.push({ title: 'New Header', width: '100px' }); // Assuming a default width of '100px'
         },
 
-        updateSpreadsheet(newColumns) {
-
-            console.log('Updating spreadsheet with new columns:', newColumns);
+        initializeColumnWidths() {
+            const columnCount = 3;
+            console.log('this.spredsheet.getWidth(1)', this.spredsheet.getWidth(1));
+            for (let i = 0; i < columnCount; i++) {
+                const width = this.spreadsheet.getWidth(i);
+                this.columnWidths.push({ value: width });
+            }
         },
+        updateColumnWidth(index, width) {
+            this.spreadsheet.setWidth(index, width);
+            this.$emit('update-column-width', { index, value: width });
+        },
+        initializeColumnHeaders() {
+            const columnCount = 3;
+            for (let i = 0; i < columnCount; i++) {
+                const header = this.spreadsheet.getHeader(i);
+                this.columnHeaders.push({ value: header });
+            }
+        },
+
+
+        /*  updateSpreadsheet(newColumns) {
+ 
+             console.log('Updating spppreadsheet with new columns:', newColumns);
+         }, */
 
         capitalizeFirstLetter(str) {
             return str.charAt(0).toUpperCase() + str.slice(1);
